@@ -1,0 +1,33 @@
+   name: Daily NIRS Research Scraper  # workflow名称
+
+   on:  # 触发条件
+     schedule:  # 每天UTC时间0点（北京时间8点）自动运行
+       - cron: '0 0 * * *'
+     workflow_dispatch:  # 支持手动触发（点击运行）
+
+   jobs:  # 任务列表
+     scrape-and-save:  # 任务名称
+       runs-on: ubuntu-latest  # 运行环境（GitHub的虚拟机）
+       steps:  # 具体步骤
+         - name: Checkout repository  # 拉取仓库代码
+           uses: actions/checkout@v4
+           
+         - name: Set up Node.js  # 安装Node.js（运行JavaScript脚本）
+           uses: actions/setup-node@v4
+           with:
+             node-version: '18'  # 版本号，不用改
+           
+         - name: Install dependencies  # 安装抓取工具（axios抓取网页，cheerio解析HTML）
+           run: npm install axios cheerio
+           
+         - name: Run scraper script  # 运行抓取脚本
+           run: node scripts/scraper.js  # 脚本路径，后面会创建
+           
+         - name: Commit and push changes  # 提交结果到仓库
+           run: |
+             git config --global user.name 'github-actions'
+             git config --global user.email 'actions@github.com'
+             git add data/  # 只提交data目录下的文件
+             git commit -m "Daily NIRS research update $(date +'%Y-%m-%d')"  # 提交信息
+             git push  # 推送到仓库
+   
